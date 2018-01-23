@@ -16,12 +16,13 @@ class MythicalManMonth < Sinatra::Base
     ]
   end
 
-  get '/get' do
-    @proverbs.sample
-  end
-
-  get '/list' do
-    @proverbs.inject("") { |acc, l| "#{acc}\n#{l}"}
+  post '/maxims' do
+    text = params[:text]
+    if text == '' || text == 'get'
+      @proverbs.sample
+    elsif text == 'list'
+      @proverbs.inject("") { |acc, l| "#{acc}\n#{l}"}
+    end
   end
 end
- 
+
