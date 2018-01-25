@@ -18,13 +18,21 @@ class MythicalManMonth < Sinatra::Base
   end
 
   post '/maxims' do
-    text = params[:text]
-    if text == '' || text == 'get'
+    op, text = params[:text].split
+    case op
+    when nil, 'get'
       res_text = "> #{@proverbs.sample}"
-    elsif text == 'list'
-      res_text = @proverbs.inject("") { |acc, l| "#{acc}> #{l}\n\n"}
+      data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
+    when 'list'
+      res_text = @proverbs.each_with_index.inject("") { |acc, (l, i) | "#{acc}> #{i+1}. #{l}\n\n"}
+      data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
+    when 'add'
+      @proverbs << text
+      data = {response_type: "ephemeral", content_type: "application/json" ,text: "Registered!"}
+    when 'delete'
+      deleted_text = @proverbs.delete_at(text.to_i-1)
+      data = {response_type: "ephemeral", content_type: "application/json" ,text: "Delete Complete.\n>#{deleted_text}"}
     end
-    data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
     json data
   end
 
