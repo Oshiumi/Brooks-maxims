@@ -1,4 +1,5 @@
-require 'sinatra/base'
+require 'sinatra'
+require 'sinatra/json'
 require 'json'
 
 
@@ -19,10 +20,12 @@ class MythicalManMonth < Sinatra::Base
   post '/maxims' do
     text = params[:text]
     if text == '' || text == 'get'
-      "> #{@proverbs.sample}"
+      res_text = "> #{@proverbs.sample}"
     elsif text == 'list'
-      @proverbs.inject("") { |acc, l| "#{acc}\n\n > #{l}"}
+      res_text = @proverbs.inject("") { |acc, l| "#{acc}> #{l}\n\n"}
     end
+    data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
+    json data
   end
 
   get '/test' do
