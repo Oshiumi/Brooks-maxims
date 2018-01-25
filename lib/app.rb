@@ -19,10 +19,14 @@ class MythicalManMonth < Sinatra::Base
   post '/maxims' do
     text = params[:text]
     if text == '' || text == 'get'
-      @proverbs.sample
+      "> #{@proverbs.sample}"
     elsif text == 'list'
-      @proverbs.inject("") { |acc, l| "#{acc}\n#{l}"}
+      @proverbs.inject("") { |acc, l| "#{acc}\n\n > #{l}"}
     end
+  end
+
+  get '/test' do
+    "test"
   end
 end
 
