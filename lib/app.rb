@@ -1,37 +1,57 @@
 require 'sinatra'
 require 'sinatra/json'
 require 'json'
-
+require 'csv'
 
 class MythicalManMonth < Sinatra::Base
+  MYTHICAL_MAN_MONTH_CHAPTER = [
+    "タールの沼",
+    "人月の神話",
+    "外科手術チーム",
+    "貴族政治、民主政治、そしてシステムデザイン",
+    "セカンドシステム症候群",
+    "命令を伝える",
+    "バベルの塔は、なぜ失敗に終わったか？",
+    "予告宣言する",
+    "5ポンド袋に詰め込んだ10ポンド",
+    "文章の前提",
+    "1つは捨石にするつまりで",
+    "切れ味のいい道具",
+    "全体と部分",
+    "破局を生み出すこと",
+    "もう1つの顔",
+    "銀の弾などない",
+    "「銀の弾などない」再発射"
+  ]
+
   configure do
     set :environment, :production
   end
 
   def initialize
-    @proverbs = [
-      "時間が足りなかったせいで失敗したプログラミング・プロジェクトは、その他のすべての原因で失敗したプログラミング・プロジェクトよりも多い。",
-      "私たちが使っている見積もり手法は、コスト計算を中心に作られたものであり、労力と進捗を混同している。人月は、人を惑わす危険な神話である。なぜなら、人月は、人と月が置き換え可能であることを暗示しているからである。",
-      "ブルックスの法則：遅れているソフトウェア・プロジェクトに人員を投入しても、そのプロジェクトをさらに遅らせるだけである。",
-      "ソフトウェア・プロジェクトに人員を追加すると、全体として必要となる労力が、次の3つの点で増加する。すなわち、再配置そのものに費やされる労力とそれによる作業の中断、新しい人員の教育、追加の相互連絡である。"
-    ]
+    @proverbs = CSV.read('./src/maxims.csv', headers: true)
   end
 
   post '/maxims' do
     op, text = params[:text].split
     case op
     when nil, 'get'
-      res_text = "> #{@proverbs.sample}"
-      data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
+      proverb, chapter = @proverbs.to_a.sample
+      attachments = [{
+          "fields": [
+                      {
+                        "title": "第#{chapter.to_i}章",
+                        "value": MYTHICAL_MAN_MONTH_CHAPTER[chapter.to_i-1]
+                      }
+          ]
+        }
+      ]
+      data = {response_type: "in_channel", content_type: "application/json" ,
+              text: proverb, attachments: attachments}
     when 'list'
-      res_text = @proverbs.each_with_index.inject("") { |acc, (l, i) | "#{acc}> #{i+1}. #{l}\n\n"}
-      data = {response_type: "in_channel", content_type: "application/json" ,text: res_text}
-    when 'add'
-      @proverbs << text
-      data = {response_type: "ephemeral", content_type: "application/json" ,text: "Registered!"}
-    when 'delete'
-      deleted_text = @proverbs.delete_at(text.to_i-1)
-      data = {response_type: "ephemeral", content_type: "application/json" ,text: "Delete Complete.\n>#{deleted_text}"}
+      res_text = @proverbs.inject("") { |acc, l | "#{acc}> #{l["proverb"]}\n\n"}
+      data = {response_type: "in_channel", content_type: "application/json" ,
+              text: res_text}
     end
     json data
   end
