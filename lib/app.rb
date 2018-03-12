@@ -36,7 +36,7 @@ class MythicalManMonth < Sinatra::Base
     op, text = params[:text].split
     case op
     when nil, 'get'
-      proverb, chapter = @proverbs.to_a.sample
+      proverb, chapter = @proverbs.to_a.drop(1).sample
       attachments = [{
           "fields": [
                       {
