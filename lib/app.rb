@@ -29,11 +29,16 @@ class MythicalManMonth < Sinatra::Base
   end
 
   def initialize
-    @proverbs = CSV.read('./src/maxims.csv', headers: true)
+    @file_name = './src/maxims.csv'
+    load_csv
+  end
+
+  def load_csv
+    @proverbs = CSV.read(@file_name)
   end
 
   post '/maxims' do
-    op, text = params[:text].split
+    op, *text = params[:text].split
     case op
     when nil, 'get'
       proverb, chapter = @proverbs.to_a.drop(1).sample
@@ -52,6 +57,11 @@ class MythicalManMonth < Sinatra::Base
       res_text = @proverbs.inject("") { |acc, l | "#{acc}> #{l["proverb"]}\n\n"}
       data = {response_type: "in_channel", content_type: "application/json" ,
               text: res_text}
+    when 'add'
+      CSV.open(@file_name, 'w') do |f|
+        f << text
+      end
+      load_csv
     end
     json data
   end
