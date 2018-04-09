@@ -2,6 +2,7 @@ require 'sinatra'
 require 'sinatra/json'
 require 'json'
 require 'csv'
+require 'redis'
 
 class MythicalManMonth < Sinatra::Base
   MYTHICAL_MAN_MONTH_CHAPTER = [
@@ -30,18 +31,29 @@ class MythicalManMonth < Sinatra::Base
 
   def initialize
     @file_name = './src/maxims.csv'
+    @redis = Redis.new
     load_csv
   end
 
   def load_csv
-    @proverbs = CSV.read(@file_name)
+    CSV.read(@file_name).each do |k, v|
+      add_proverbs(k, v)
+    end
+  end
+
+  def get_proverbs
+    @redis.get("prov-*").map { |e| Marshal.load(e)}
+  end
+
+  def add_proverbs(prov, chapter)
+    @redis.set "prov-#{Digest::SHA1.hexdigest(prov)}", Marshal.dump([prov,chapter])
   end
 
   post '/maxims' do
     op, *text = params[:text].split
     case op
     when nil, 'get'
-      proverb, chapter = @proverbs.to_a.drop(1).sample
+      proverb, chapter = get_proverbs.sample
       attachments = [{
           "fields": [
                       {
@@ -54,14 +66,14 @@ class MythicalManMonth < Sinatra::Base
       data = {response_type: "in_channel", content_type: "application/json" ,
               text: proverb, attachments: attachments}
     when 'list'
-      res_text = @proverbs.drop(1).inject("") { |acc, l| "#{acc}> #{l.first}\n\n"}
+      res_text = get_proverbs.inject("") { |acc, l| "#{acc}> #{l.first}\n\n"}
       data = {content_type: "application/json" ,text: res_text}
     when 'add'
       CSV.open(@file_name, 'a') do |f|
         f << text
       end
-      @proverbs << text
       proverb, chapter = text
+      add_proverbs(proverb, chapter)
       attachments = [{
                        "fields": [
                                    {
@@ -77,7 +89,7 @@ class MythicalManMonth < Sinatra::Base
   end
 
   get '/test' do
-    "test"
+    'test'
   end
 end
 

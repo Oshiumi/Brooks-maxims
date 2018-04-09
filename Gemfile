@@ -8,4 +8,4 @@ gem 'sinatra-contrib'
 gem 'dotenv'
 gem 'unicorn'
 gem 'slack-api'
-
+gem 'redis'
