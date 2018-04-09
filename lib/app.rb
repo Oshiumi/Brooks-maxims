@@ -54,14 +54,24 @@ class MythicalManMonth < Sinatra::Base
       data = {response_type: "in_channel", content_type: "application/json" ,
               text: proverb, attachments: attachments}
     when 'list'
-      res_text = @proverbs.inject("") { |acc, l | "#{acc}> #{l["proverb"]}\n\n"}
-      data = {response_type: "in_channel", content_type: "application/json" ,
-              text: res_text}
+      res_text = @proverbs.drop(1).inject("") { |acc, l| "#{acc}> #{l.first}\n\n"}
+      data = {content_type: "application/json" ,text: res_text}
     when 'add'
-      CSV.open(@file_name, 'w') do |f|
+      CSV.open(@file_name, 'a') do |f|
         f << text
       end
-      load_csv
+      @proverbs << text
+      proverb, chapter = text
+      attachments = [{
+                       "fields": [
+                                   {
+                                     "title": "第#{chapter.to_i}章",
+                                    "value": MYTHICAL_MAN_MONTH_CHAPTER[chapter.to_i-1]
+                                   }
+                                 ]
+                     }
+                    ]
+      data = {content_type: "application/json", text: "Success \n#{proverb}", attachments: attachments}
     end
     json data
   end
