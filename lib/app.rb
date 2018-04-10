@@ -42,7 +42,7 @@ class MythicalManMonth < Sinatra::Base
   end
 
   def get_proverbs
-    @redis.get("prov-*").map { |e| Marshal.load(e)}
+    @redis.keys("prov-*").map { |k| Marshal.load(@redis.get(k)) }
   end
 
   def add_proverbs(prov, chapter)
