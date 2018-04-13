@@ -110,7 +110,8 @@ class MythicalManMonth < Sinatra::Base
                                  ]
                      }
                     ]
-      data = {content_type: "application/json", text: "Success \n#{proverb}", attachments: attachments}
+      data = {response_type: "in_channel", content_type: "application/json",
+              text: "Add proverbs: \n#{proverb}", attachments: attachments}
     end
     json data
   end
