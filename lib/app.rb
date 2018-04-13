@@ -32,13 +32,6 @@ class MythicalManMonth < Sinatra::Base
   def initialize
     @file_name = './src/maxims.csv'
     @redis = Redis.new
-    load_csv
-  end
-
-  def load_csv
-    CSV.read(@file_name).each do |k, v|
-      add_proverbs(k, v)
-    end
   end
 
   def get_proverbs
