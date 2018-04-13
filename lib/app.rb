@@ -49,6 +49,33 @@ class MythicalManMonth < Sinatra::Base
     @redis.set "prov-#{Digest::SHA1.hexdigest(prov)}", Marshal.dump([prov,chapter])
   end
 
+  def delete_proverbs(key)
+    @redis.del key
+  end
+
+  def list_piece(text)
+    {
+      "text": text,
+     "callback_id": "prov-#{Digest::SHA1.hexdigest(text)}",
+     "actions": [
+                  {
+                    "name": "delete",
+                   "text": "Delete",
+                   "style": "danger",
+                   "type": "button",
+                   "value": "delete",
+                   "confirm": {
+                                "title": "削除",
+                               "text": "本当に削除しますか?",
+                               "ok_text": "はい",
+                               "dismiss_text": "いいえ"
+                              }
+                  }
+
+                ]
+    }
+  end
+
   post '/maxims' do
     op, *text = params[:text].split
     case op
@@ -66,8 +93,8 @@ class MythicalManMonth < Sinatra::Base
       data = {response_type: "in_channel", content_type: "application/json" ,
               text: proverb, attachments: attachments}
     when 'list'
-      res_text = get_proverbs.inject("") { |acc, l| "#{acc}> #{l.first}\n\n"}
-      data = {content_type: "application/json" ,text: res_text}
+      attachments = get_proverbs.inject([]) { |acc, l| acc << list_piece(l.first)}
+      data = {content_type: "application/json" , attachments: attachments}
     when 'add'
       CSV.open(@file_name, 'a') do |f|
         f << text
@@ -84,6 +111,18 @@ class MythicalManMonth < Sinatra::Base
                      }
                     ]
       data = {content_type: "application/json", text: "Success \n#{proverb}", attachments: attachments}
+    end
+    json data
+  end
+
+  post '/results' do
+    content_type :json
+    results = JSON.parse(params[:payload])
+    if results["callback_id"]
+      delete_proverbs(results["callback_id"])
+      data = {content_type: "application/json", text: "削除しました。"}
+    else
+      data = {content_type: "application/json", text: "不正な動作です"}
     end
     json data
   end
