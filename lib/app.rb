@@ -32,6 +32,7 @@ class MythicalManMonth < Sinatra::Base
   def initialize
     @file_name = './src/maxims.csv'
     @redis = Redis.new
+    @white_user_id_list = ["U4TH5LJ85"]
   end
 
   def get_proverbs
@@ -69,6 +70,11 @@ class MythicalManMonth < Sinatra::Base
     }
   end
 
+  def respose_body(text: "", in_channel: false, attachments: [])
+    {respose_type: in_channel ? "in_channel" : "ephemeral",
+     content_type: "application/json", text: text, attachments: attachments}
+  end
+
   post '/maxims' do
     op, *text = params[:text].split
     case op
@@ -82,12 +88,13 @@ class MythicalManMonth < Sinatra::Base
                       }
           ]
         }
-      ]
-      data = {response_type: "in_channel", content_type: "application/json" ,
-              text: proverb, attachments: attachments}
+                    ]
+      data = respose_body(text: proverb, in_channel: true,
+                          attachments: attachments)
+
     when 'list'
       attachments = get_proverbs.inject([]) { |acc, l| acc << list_piece(l.first)}
-      data = {content_type: "application/json" , attachments: attachments}
+      data = respose_body(attachments: attachments)
     when 'add'
       CSV.open(@file_name, 'a') do |f|
         f << text
@@ -103,8 +110,8 @@ class MythicalManMonth < Sinatra::Base
                                  ]
                      }
                     ]
-      data = {response_type: "in_channel", content_type: "application/json",
-              text: "Add proverbs: \n#{proverb}", attachments: attachments}
+      data = respose_body(text: "Add proverbs: \n#{proverb}", in_channel: true,
+                          attachments: attachments)
     end
     json data
   end
@@ -112,13 +119,15 @@ class MythicalManMonth < Sinatra::Base
   post '/results' do
     content_type :json
     results = JSON.parse(params[:payload])
-    if results["callback_id"]
+    text = ""
+    if results["callback_id"] &&
+       @white_user_id_list.include?(results["user"]["id"])
       delete_proverbs(results["callback_id"])
-      data = {content_type: "application/json", text: "削除しました。"}
+      text = "削除しました。"
     else
-      data = {content_type: "application/json", text: "不正な動作です"}
+      text = "不正な動作です"
     end
-    json data
+    json respose_body(text: text)
   end
 
   get '/test' do
