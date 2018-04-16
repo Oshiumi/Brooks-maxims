@@ -12,6 +12,7 @@ GEM
       eventmachine (>= 0.12.0)
       websocket-driver (>= 0.5.1)
     kgio (2.11.1)
+    logger (1.2.8)
     multi_json (1.13.1)
     multipart-post (2.0.0)
     mustermann (1.0.1)
@@ -50,6 +51,7 @@ PLATFORMS
 
 DEPENDENCIES
   dotenv
+  logger
   redis
   sinatra
   sinatra-contrib

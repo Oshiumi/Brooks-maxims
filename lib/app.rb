@@ -3,6 +3,7 @@ require 'sinatra/json'
 require 'json'
 require 'csv'
 require 'redis'
+require 'logger'
 
 class MythicalManMonth < Sinatra::Base
   MYTHICAL_MAN_MONTH_CHAPTER = [
@@ -33,6 +34,7 @@ class MythicalManMonth < Sinatra::Base
     @file_name = './src/maxims.csv'
     @redis = Redis.new
     @white_user_id_list = ["U4TH5LJ85"]
+    @logger = Logger.new('./log/application.log')
   end
 
   def get_proverbs
@@ -89,9 +91,7 @@ class MythicalManMonth < Sinatra::Base
                                  ]
                      }
                     ]
-      data = respose_body(text: proverb, in_channel: true,
-                          attachments: attachments)
-
+      data = respose_body(text: proverb, in_channel: true, attachments: attachments)
     when 'list'
       attachments = get_proverbs.inject([]) { |acc, l| acc << list_piece(l.first)}
       data = respose_body(attachments: attachments)
@@ -113,6 +113,7 @@ class MythicalManMonth < Sinatra::Base
       data = respose_body(text: "Add proverbs: \n#{proverb}", in_channel: true,
                           attachments: attachments)
     end
+    @logger.info data.to_s
     json data
   end
 
@@ -131,7 +132,6 @@ class MythicalManMonth < Sinatra::Base
   end
 
   get '/test' do
-    'test'
+    json respose_body(text: 'aa', in_channel: true)
   end
 end
-
