@@ -71,7 +71,7 @@ class MythicalManMonth < Sinatra::Base
   end
 
   def respose_body(text: "", in_channel: false, attachments: [])
-    {respose_type: in_channel ? "in_channel" : "ephemeral",
+    {respose_type: (in_channel ? "in_channel" : "ephemeral"),
      content_type: "application/json", text: text, attachments: attachments}
   end
 
@@ -81,13 +81,13 @@ class MythicalManMonth < Sinatra::Base
     when nil, 'get'
       proverb, chapter = get_proverbs.sample
       attachments = [{
-          "fields": [
-                      {
-                        "title": "第#{chapter.to_i}章",
-                        "value": MYTHICAL_MAN_MONTH_CHAPTER[chapter.to_i-1]
-                      }
-          ]
-        }
+                       "fields": [
+                                   {
+                                     "title": "第#{chapter.to_i}章",
+                                    "value": MYTHICAL_MAN_MONTH_CHAPTER[chapter.to_i-1]
+                                   }
+                                 ]
+                     }
                     ]
       data = respose_body(text: proverb, in_channel: true,
                           attachments: attachments)
